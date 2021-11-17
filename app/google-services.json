@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "251596653787",
+    "project_id": "mchat-c773b",
+    "storage_bucket": "mchat-c773b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:251596653787:android:a54aae32be3fe7e72578fe",
+        "android_client_info": {
+          "package_name": "com.chemanu.mchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "251596653787-dj9e23r2qm4o70iaifq5h0n2pb8k50sb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIlshIZrz7hQL82t74pRyNmUklSSXWgNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "251596653787-dj9e23r2qm4o70iaifq5h0n2pb8k50sb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
