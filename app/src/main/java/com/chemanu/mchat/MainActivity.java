@@ -66,10 +66,13 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
 
+        //Borrar los datos de caché. SOLO PARA TEST
+        FirebaseFirestore.getInstance().clearPersistence();
         db = FirebaseFirestore.getInstance();
 
         if (getIntent().getBooleanExtra("EXIT", false))
         {
+            mAuth.signOut();
             finish();
         }
 
@@ -130,23 +133,8 @@ public class MainActivity extends AppCompatActivity {
         // Comprobar si el usuario ya se registró
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        if (currentUser != null ) {
-            //Pruebas de lectura y escritura
-            readFromDB(new UserCallback() {
-                @Override
-                public void onCallBack(User user) {
-                    String phone = "";
+        updateUI(currentUser);
 
-                    if (user != null) {
-                        phone = user.phone.toString();
-                    }
-                    Log.d("TAG", phone);
-                    updateUI(currentUser, phone);
-                }
-            });
-        } else {
-            updateUI(currentUser, "");
-        }
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
@@ -160,44 +148,30 @@ public class MainActivity extends AppCompatActivity {
 
                             FirebaseUser userFB = task.getResult().getUser();
 
-                            //updateUI(userFB, "");
+                            updateUI(userFB);
                         } else {
                             // Sign in failed, display a message and update the UI
                             //Log.w(TAG, "signInWithCredential:failure", task.getException());
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 // The verification code entered was invalid
                                 Log.d("TAG", "Error en la validación del código");
+                                showError("Error en el registro del usuario");
                             }
                         }
                     }
                 });
     }
 
-    private void updateUI(FirebaseUser userFB, String phone) {
+    private void updateUI(FirebaseUser userFB) {
         if (userFB == null) {
             //Ocultar imagen de carga para que se muestre el registro
             imgBackground.setVisibility(View.INVISIBLE);
             Log.d("TAG", "Empezar registro");
         } else {
-            //Si no existe el teléfono en la base de datos lo guardamos
-            if (phone == "") {
-                Log.d("TAG", "Usuario ya registrado. Guardar en BD");
-                User user = new User();
-                user.phone = edtPhone.getText().toString();
-                db.collection("users").add(user)
-                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                            @Override
-                            public void onSuccess(DocumentReference documentReference) {
-                                Log.d("TAG", "Usuario guardado en BD");
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("TAG", "Error al guardar usuario en BD");
-                    }
-                });
+            //Comprobar si ya está el usuario guardado en BD
+            String userId = userFB.getUid();
 
-            }
+            readUserFromDB(userId);
 
             //Pasar a la aplicación
             validar();
@@ -214,29 +188,52 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void readFromDB(UserCallback userCallback) {
-        Log.d("TAG", "Leyendo de la BD");
-        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+    private void readUserFromDB(String userId) {
+        Log.d("TAG", "Leyendo usuario de la BD");
+        db.collection("users").document(userId).get()
+            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                User user = null;
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful()) {
-                    QuerySnapshot document = task.getResult();
-                    if (!document.isEmpty()) {
-                        for (DocumentSnapshot doc : document) {
-                            user = doc.toObject(User.class);
-                            Log.d("TAG", "Dato leído correctamente. Llamada al Callback");
-                            userCallback.onCallBack(user);
-                        }
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        //Usuario existe en BD. Pasar a App
+                        Log.d("TAG", "Usuario ya existe en BD");
+                        validar();
+                    } else {
+                        //Usuario NO existe en BD. Guardarlo
+                        //Log.d("TAG", "Error al leer teléfono de la BD");
+                        Log.d("TAG", "Usuario No existe en BD");
+                        saveUserInDB(userId);
                     }
                 } else {
-                    Log.d("TAG", "Error al leer teléfono de la BD");
-                    Log.d("TAG", task.getException().getMessage().toString());
-                    userCallback.onCallBack(user);
+                    Log.d("TAG", "Error al leer de la BD: "
+                            + task.getException().getMessage());
                 }
             }
         });
 
+    }
+
+    private void saveUserInDB(String userId) {
+        String phone = edtPhone.getText().toString();
+
+        User user = new User(phone);
+
+        db.collection("users").document(userId).set(user)
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    validar();
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d("TAG", "Error al guardar usuario en BD: "
+                        + e.getMessage().toString());
+                }
+            });
     }
 
     public interface UserCallback {
