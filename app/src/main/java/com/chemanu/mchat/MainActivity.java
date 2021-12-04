@@ -2,9 +2,18 @@ package com.chemanu.mchat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +41,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -45,16 +55,25 @@ public class MainActivity extends AppCompatActivity {
     private PhoneAuthProvider.ForceResendingToken mResendToken;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallBacks;
 
+    private Modelo modelo;
+
     private EditText edtPhone, edtCode;
     private Button btnRegistrar;
     private ImageView imgBackground;
 
     private FirebaseFirestore db;
 
+    private static final int PERMISO_CONTACTOS = 0;
+
+    private ArrayList<String> phonesList = new ArrayList<String>(),
+                                phonesFB = new ArrayList<String>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        modelo = (Modelo) getApplication();
 
         edtPhone = findViewById(R.id.editPhone);
         edtCode = findViewById(R.id.edtCode);
@@ -64,15 +83,12 @@ public class MainActivity extends AppCompatActivity {
         btnRegistrar.setEnabled(false);
 
         mAuth = FirebaseAuth.getInstance();
-        mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
+        //mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
 
-        //Borrar los datos de caché. SOLO PARA TEST
-        FirebaseFirestore.getInstance().clearPersistence();
         db = FirebaseFirestore.getInstance();
 
         if (getIntent().getBooleanExtra("EXIT", false))
         {
-            mAuth.signOut();
             finish();
         }
 
@@ -86,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onVerificationFailed(@NonNull FirebaseException e) {
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                    // Invlaid request
+                    // Invalid request
                 } else if (e instanceof FirebaseTooManyRequestsException) {
                     // The SMS quota for the project has been exceeded
                 }
@@ -130,11 +146,28 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         Log.d("TAG", "On Start iniciado");
 
-        // Comprobar si el usuario ya se registró
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        //Comprobar si tenemos permiso para acceder a los contactos
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_DENIED) {
+            //Pedir permiso para acceder a los contactos
+            ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    new String[] {Manifest.permission.READ_CONTACTS},
+                    PERMISO_CONTACTOS);
+        } else {
+            // Comprobar si el usuario ya se registró
+            FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        updateUI(currentUser);
+            updateUI(currentUser);
+        }
 
+    }
+
+    private void validar() {
+        //Pasar a la aplicación
+        Log.d("TAG", "Pasar a la aplicación");
+        Intent i = new Intent(this, ChatMain.class);
+        startActivity(i);
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
@@ -169,23 +202,14 @@ public class MainActivity extends AppCompatActivity {
             Log.d("TAG", "Empezar registro");
         } else {
             //Comprobar si ya está el usuario guardado en BD
-            String userId = userFB.getUid();
+            modelo.userId = userFB.getUid();
+            readUserFromDB(modelo.userId);
 
-            readUserFromDB(userId);
-
-            //Pasar a la aplicación
-            validar();
         }
     }
 
     private void showError(String error) {
         Toast.makeText( this , error, Toast.LENGTH_SHORT).show();
-    }
-
-    private void validar() {
-        Intent i = new Intent(this, ChatMain.class);
-        startActivity(i);
-
     }
 
     private void readUserFromDB(String userId) {
@@ -199,7 +223,8 @@ public class MainActivity extends AppCompatActivity {
                     if (document.exists()) {
                         //Usuario existe en BD. Pasar a App
                         Log.d("TAG", "Usuario ya existe en BD");
-                        validar();
+                        modelo.user = (User) document.toObject(User.class);
+                        cargarContactos();
                     } else {
                         //Usuario NO existe en BD. Guardarlo
                         //Log.d("TAG", "Error al leer teléfono de la BD");
@@ -216,7 +241,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveUserInDB(String userId) {
-        String phone = edtPhone.getText().toString();
+        String phone = "+34" + edtPhone.getText().toString();
+        phone = PhoneNumberUtils.formatNumber(phone, "ES");
 
         User user = new User(phone);
 
@@ -224,7 +250,8 @@ public class MainActivity extends AppCompatActivity {
             .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void unused) {
-                    validar();
+                    modelo.user = user;
+                    cargarContactos();
                 }
             })
             .addOnFailureListener(new OnFailureListener() {
@@ -236,8 +263,101 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
-    public interface UserCallback {
-        void onCallBack(User user);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISO_CONTACTOS) {
+
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Comprobar si el usuario ya se registró
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+
+                updateUI(currentUser);
+            }
+
+        }
+    }
+
+    @SuppressLint("Range")
+    private void cargarContactos() {
+        //Cargar contactos del teléfono
+        Log.d("TAG", "Cargando contactos...");
+        ContentResolver cr = getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, null);
+
+        if ((cur != null ? cur.getCount() : 0) > 0) {
+            while (cur != null && cur.moveToNext()) {
+                String id = cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts._ID));
+
+                if (cur.getInt(cur.getColumnIndex(
+                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    while (pCur.moveToNext()) {
+                        String phoneNo = pCur.getString(pCur.getColumnIndex(
+                                ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                        phonesList.add(phoneNo);
+
+                    }
+                    pCur.close();
+                }
+            }
+        }
+        if(cur!=null){
+            cur.close();
+        }
+
+        //Cargar teléfonos de usuarios de la base de datos
+        db.collection("users")
+            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (DocumentSnapshot doc : task.getResult()) {
+                            phonesFB.add(doc.getString("phone"));
+                    }
+                    //Cargar contactos de la aplicación
+                    for (String phoneFB : phonesFB) {
+                        if (phonesList.contains(phoneFB)) {
+                            modelo.contactos.add(phoneFB);
+                        }
+                    }
+                    Log.d("TAG", "Contactos cargados de la BD");
+                    cargarChats();
+                } else {
+                    Log.d("TAG", "Error cargando contactos de la BD");
+                }
+            }
+        });
+    }
+
+    private void cargarChats() {
+        //Cargar los chats para el usuario
+        Log.d("TAG", "Cargando chats de la BD...");
+        db.collection("users").document(modelo.userId).collection("chats")
+            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot doc : task.getResult()) {
+                        //recuperar ID de Chat
+                        modelo.chats.add(doc.getString("chatWith"));
+                    }
+                    Log.d("TAG", "Chats cargados de la BD");
+                    validar();
+                } else {
+                    Log.d("TAG", "Error cargando chats de la BD");
+                }
+            }
+        });
     }
 
 }

@@ -1,8 +1,11 @@
 package com.chemanu.mchat;
 
+import java.util.ArrayList;
+
 public class User {
 
     public String phone;
+    public ArrayList<String> chats;
 
     public User() {
 
@@ -14,7 +17,6 @@ public class User {
 
     public String getPhone() {
       return this.phone;
-    };
-
+    }
 
 }
