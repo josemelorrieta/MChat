@@ -6,24 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".ChatMain">
 
-    <ImageView
-        android:id="@+id/imgWelcome"
-        android:layout_width="564dp"
-        android:layout_height="362dp"
-        tools:layout_editor_absoluteX="-86dp"
-        tools:layout_editor_absoluteY="424dp"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
-
-    <TextView
-        android:id="@+id/txtWelcome"
-        android:layout_width="289dp"
-        android:layout_height="102dp"
-        android:layout_marginTop="196dp"
-        android:text="Bienvenido a MChat"
-        android:textAlignment="center"
-        android:textSize="34sp"
-        android:textStyle="bold"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChatList"
+        android:layout_width="409dp"
+        android:layout_height="729dp"
+        android:layout_marginTop="128dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fltNuevoChat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:clickable="true"
+        android:onClick="nuevoChat"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_input_add" />
 </androidx.constraintlayout.widget.ConstraintLayout>

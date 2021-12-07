@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.ContactsContract;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
@@ -41,6 +42,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -68,12 +70,15 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> phonesList = new ArrayList<String>(),
                                 phonesFB = new ArrayList<String>();
 
+    private Utils utils;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         modelo = (Modelo) getApplication();
+        utils = new Utils(this);
 
         edtPhone = findViewById(R.id.editPhone);
         edtCode = findViewById(R.id.edtCode);
@@ -86,11 +91,6 @@ public class MainActivity extends AppCompatActivity {
         //mAuth.getFirebaseAuthSettings().setAppVerificationDisabledForTesting(true);
 
         db = FirebaseFirestore.getInstance();
-
-        if (getIntent().getBooleanExtra("EXIT", false))
-        {
-            finish();
-        }
 
         mCallBacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             //Pedir permiso para acceder a los contactos
             ActivityCompat.requestPermissions(
                     MainActivity.this,
-                    new String[] {Manifest.permission.READ_CONTACTS},
+                    new String[]{Manifest.permission.READ_CONTACTS},
                     PERMISO_CONTACTOS);
         } else {
             // Comprobar si el usuario ya se registró
@@ -160,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
 
             updateUI(currentUser);
         }
-
     }
 
     private void validar() {
@@ -241,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveUserInDB(String userId) {
-        String phone = "+34" + edtPhone.getText().toString();
+        String phone = edtPhone.getText().toString();
         phone = PhoneNumberUtils.formatNumber(phone, "ES");
 
         User user = new User(phone);
@@ -284,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
     private void cargarContactos() {
         //Cargar contactos del teléfono
         Log.d("TAG", "Cargando contactos...");
-        ContentResolver cr = getContentResolver();
+        /*ContentResolver cr = getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
 
@@ -304,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER));
 
-                        phonesList.add(phoneNo);
+                        phonesList.add(PhoneNumberUtils.formatNumber(phoneNo, "ES"));
 
                     }
                     pCur.close();
@@ -313,7 +312,8 @@ public class MainActivity extends AppCompatActivity {
         }
         if(cur!=null){
             cur.close();
-        }
+        }*/
+        phonesList = utils.recuperarContactostelefono();
 
         //Cargar teléfonos de usuarios de la base de datos
         db.collection("users")
@@ -325,11 +325,14 @@ public class MainActivity extends AppCompatActivity {
                             phonesFB.add(doc.getString("phone"));
                     }
                     //Cargar contactos de la aplicación
-                    for (String phoneFB : phonesFB) {
-                        if (phonesList.contains(phoneFB)) {
-                            modelo.contactos.add(phoneFB);
+                    utils.cargarContactosApp(phonesList, phonesFB, modelo);
+                    /*for (String phoneFB : phonesFB) {
+                        for (String phoneNo : phonesList) {
+                            if (PhoneNumberUtils.compare(phoneFB, phoneNo)) {
+                                modelo.contactos.add(phoneNo);
+                            }
                         }
-                    }
+                    }*/
                     Log.d("TAG", "Contactos cargados de la BD");
                     cargarChats();
                 } else {
