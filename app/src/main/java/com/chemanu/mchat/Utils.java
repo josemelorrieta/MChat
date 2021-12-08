@@ -17,9 +17,9 @@ public class Utils {
     }
 
     @SuppressLint("Range")
-    public ArrayList<String> recuperarContactostelefono() {
+    public ArrayList<User> recuperarContactostelefono() {
 
-        ArrayList<String> phonesList = new ArrayList<String>();
+        ArrayList<User> phonesList = new ArrayList<User>();
 
         ContentResolver cr = context.getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
@@ -41,7 +41,12 @@ public class Utils {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER));
 
-                        phonesList.add(PhoneNumberUtils.formatNumber(phoneNo, "ES"));
+                        phoneNo = PhoneNumberUtils.formatNumber(phoneNo, "ES");
+
+                        String name = pCur.getString(pCur.getColumnIndex(
+                                ContactsContract.Data.DISPLAY_NAME));
+
+                        phonesList.add(new User(name, phoneNo));
 
                     }
                     pCur.close();
@@ -55,14 +60,17 @@ public class Utils {
         return phonesList;
     }
 
-    public void cargarContactosApp (ArrayList<String> phonesList, ArrayList<String> phonesFB, Modelo modelo) {
-        modelo.contactos.clear();
-        for (String phoneFB : phonesFB) {
-            for (String phoneNo : phonesList) {
-                if (PhoneNumberUtils.compare(phoneFB, phoneNo)) {
-                    modelo.contactos.add(phoneNo);
+    public ArrayList<User> generarContactosApp (ArrayList<User> phonesList, ArrayList<User> usersFB) {
+        ArrayList<User> contactos = new ArrayList<User>();
+
+        for (User userFB : usersFB) {
+            for (int i = 0; i< phonesList.size();i++) {
+                if (PhoneNumberUtils.compare(userFB.getPhone(), phonesList.get(i).getPhone())) {
+                    contactos.add(userFB);
                 }
             }
         }
+
+        return contactos;
     }
 }

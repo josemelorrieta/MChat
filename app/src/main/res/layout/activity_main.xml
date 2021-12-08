@@ -24,14 +24,14 @@
         android:id="@+id/editPhone"
         android:layout_width="150dp"
         android:layout_height="48dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:elevation="1dp"
         android:ems="10"
         android:hint="Teléfono"
         android:inputType="phone"
-        app:layout_constraintEnd_toEndOf="@+id/txtTitulo"
-        app:layout_constraintStart_toStartOf="@+id/txtTitulo"
-        app:layout_constraintTop_toBottomOf="@+id/txtTitulo" />
+        app:layout_constraintEnd_toEndOf="@+id/edtName"
+        app:layout_constraintStart_toStartOf="@+id/edtName"
+        app:layout_constraintTop_toBottomOf="@+id/edtName" />
 
     <TextView
         android:id="@+id/txtTitulo"
@@ -91,18 +91,30 @@
         app:layout_constraintEnd_toStartOf="@+id/editPhone"
         app:layout_constraintTop_toTopOf="@+id/editPhone" />
 
+    <EditText
+        android:id="@+id/edtName"
+        android:layout_width="220dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="32dp"
+        android:elevation="1dp"
+        android:ems="10"
+        android:hint="Nombre"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/txtTitulo"
+        app:layout_constraintStart_toStartOf="@+id/txtTitulo"
+        app:layout_constraintTop_toBottomOf="@+id/txtTitulo" />
+
     <ImageView
         android:id="@+id/imgBackground"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:elevation="2dp"
         android:scaleType="centerCrop"
-        android:visibility="visible"
         android:src="@drawable/mchat_background"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

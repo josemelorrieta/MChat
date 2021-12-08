@@ -34,8 +34,8 @@ public class NuevoChat extends AppCompatActivity {
     private FirebaseFirestore db;
     private Utils utils;
 
-    public ArrayList<String> phonesList = new ArrayList<String>(),
-                             phonesFB = new ArrayList<String>();
+    public ArrayList<User> phonesList = new ArrayList<User>();
+    public ArrayList<User> usersFB = new ArrayList<User>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,20 +58,21 @@ public class NuevoChat extends AppCompatActivity {
 
     private class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHolder> {
 
-        private ArrayList<String> contactos;
+        private ArrayList<User> contactos;
 
-        public ContactsAdapter(ArrayList<String> contactos) {
+        public ContactsAdapter(ArrayList<User> contactos) {
             this.contactos = contactos;
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-            public TextView txtPhone;
+            public TextView txtName, txtState;
 
             public ViewHolder (Context context, View itemView) {
                 super(itemView);
 
-                txtPhone = (TextView) itemView.findViewById((R.id.txtContactName));
+                txtName = (TextView) itemView.findViewById(R.id.txtContactName);
+                txtState = (TextView) itemView.findViewById(R.id.txtState);
             }
 
             @Override
@@ -98,9 +99,10 @@ public class NuevoChat extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(ContactsAdapter.ViewHolder holder, int position) {
-            String contact = contactos.get(position);
+            User contact = contactos.get(position);
 
-            holder.txtPhone.setText(contact);
+            holder.txtName.setText(contact.getName());
+            holder.txtState.setText(contact.getState());
         }
 
         @Override
@@ -142,10 +144,11 @@ public class NuevoChat extends AppCompatActivity {
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                     for (DocumentSnapshot doc : task.getResult()) {
-                        phonesFB.add(doc.getString("phone"));
+                        User userFB = doc.toObject(User.class);
+                        usersFB.add(userFB);
                     }
                     //Cargar contactos de la aplicación
-                    utils.cargarContactosApp(phonesList, phonesFB, modelo);
+                    modelo.contactos = utils.generarContactosApp(phonesList, usersFB);
                     contactList.getAdapter().notifyDataSetChanged();
                 } else {
                     Log.d("TAG", "Error cargando contactos de la BD");
