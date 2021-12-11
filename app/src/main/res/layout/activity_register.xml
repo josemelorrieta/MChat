@@ -4,4 +4,98 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RegisterActivity"/>
+    tools:context=".RegisterActivity">
+
+
+    <Button
+    android:id="@+id/btnEnviar"
+    style="@style/Widget.AppCompat.Button.Colored"
+    android:layout_width="120dp"
+    android:layout_height="52dp"
+    android:layout_marginTop="16dp"
+    android:onClick="startPhoneVerification"
+    android:text="ENVIAR"
+    app:layout_constraintEnd_toEndOf="@+id/editPhone"
+    app:layout_constraintHorizontal_bias="0.497"
+    app:layout_constraintStart_toStartOf="@+id/editPhone"
+    app:layout_constraintTop_toBottomOf="@+id/editPhone" />
+
+    <EditText
+    android:id="@+id/editPhone"
+    android:layout_width="150dp"
+    android:layout_height="48dp"
+    android:layout_marginTop="24dp"
+    android:ems="10"
+    android:hint="Teléfono"
+    android:inputType="phone"
+    app:layout_constraintEnd_toEndOf="@+id/edtName"
+    app:layout_constraintStart_toStartOf="@+id/edtName"
+    app:layout_constraintTop_toBottomOf="@+id/edtName" />
+
+    <TextView
+    android:id="@+id/txtTitulo"
+    android:layout_width="150dp"
+    android:layout_height="60dp"
+    android:layout_marginTop="100dp"
+    android:text="Registro"
+    android:textAlignment="center"
+    android:textSize="34sp"
+    android:textStyle="bold"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.497"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+    android:id="@+id/edtCode"
+    android:layout_width="150dp"
+    android:layout_height="48dp"
+    android:layout_marginTop="48dp"
+    android:ems="10"
+    android:enabled="false"
+    android:hint="Código"
+    android:inputType="textPersonName"
+    app:layout_constraintEnd_toEndOf="@+id/editPhone"
+    app:layout_constraintStart_toStartOf="@+id/editPhone"
+    app:layout_constraintTop_toBottomOf="@+id/btnEnviar" />
+
+    <Button
+    android:id="@+id/btnRegistrar"
+    style="@style/Widget.AppCompat.Button.Colored"
+    android:layout_width="120dp"
+    android:layout_height="52dp"
+    android:layout_marginTop="16dp"
+    android:clickable="true"
+    android:enabled="true"
+    android:onClick="verifyPhoneNumberWithCode"
+    android:text="Registrar"
+    app:layout_constraintEnd_toEndOf="@+id/edtCode"
+    app:layout_constraintStart_toStartOf="@+id/edtCode"
+    app:layout_constraintTop_toBottomOf="@+id/edtCode"
+    tools:clickable="false" />
+
+    <TextView
+    android:id="@+id/txtCountry"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="8dp"
+    android:text="+34"
+    android:textAlignment="textEnd"
+    android:textSize="18sp"
+    app:layout_constraintBottom_toBottomOf="@+id/editPhone"
+    app:layout_constraintEnd_toStartOf="@+id/editPhone"
+    app:layout_constraintTop_toTopOf="@+id/editPhone" />
+
+    <EditText
+    android:id="@+id/edtName"
+    android:layout_width="220dp"
+    android:layout_height="48dp"
+    android:layout_marginTop="32dp"
+    android:ems="10"
+    android:hint="Nombre"
+    android:inputType="textPersonName"
+    app:layout_constraintEnd_toEndOf="@+id/txtTitulo"
+    app:layout_constraintStart_toStartOf="@+id/txtTitulo"
+    app:layout_constraintTop_toBottomOf="@+id/txtTitulo" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

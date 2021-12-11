@@ -14,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,12 +68,14 @@ public class NuevoChat extends AppCompatActivity {
         public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             public TextView txtName, txtState;
+            public ImageView imgContact;
 
             public ViewHolder (Context context, View itemView) {
                 super(itemView);
 
                 txtName = (TextView) itemView.findViewById(R.id.txtContactName);
                 txtState = (TextView) itemView.findViewById(R.id.txtState);
+                imgContact = (ImageView) itemView.findViewById(R.id.imgContact);
             }
 
             @Override
@@ -103,6 +106,8 @@ public class NuevoChat extends AppCompatActivity {
 
             holder.txtName.setText(contact.getName());
             holder.txtState.setText(contact.getState());
+            holder.imgContact.setImageBitmap(utils.cargarImagenContacto(contact.getId(), 100, 100));
+
         }
 
         @Override
@@ -145,7 +150,9 @@ public class NuevoChat extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     for (DocumentSnapshot doc : task.getResult()) {
                         User userFB = doc.toObject(User.class);
+                        userFB.setId(doc.getId());
                         usersFB.add(userFB);
+
                     }
                     //Cargar contactos de la aplicación
                     modelo.contactos = utils.generarContactosApp(phonesList, usersFB);
