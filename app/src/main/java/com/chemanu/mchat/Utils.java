@@ -14,9 +14,13 @@ import android.os.Environment;
 import android.provider.ContactsContract;
 import android.telephony.PhoneNumberUtils;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -87,8 +91,8 @@ public class Utils {
         return contactos;
     }
 
-    public Bitmap cargarImagenContacto (String image, int reqWidth, int reqHeight) {
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/MChat/ProfileImages/" + image + ".jpg");
+    public Bitmap cargarImagen (String imagen, int reqWidth, int reqHeight) {
+        File file = new File(imagen);
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();

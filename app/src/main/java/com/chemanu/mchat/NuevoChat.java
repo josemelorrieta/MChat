@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,13 +18,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 
@@ -33,6 +35,7 @@ public class NuevoChat extends AppCompatActivity {
     private RecyclerView contactList;
 
     private FirebaseFirestore db;
+    private StorageReference storageReference;
     private Utils utils;
 
     public ArrayList<User> phonesList = new ArrayList<User>();
@@ -47,6 +50,7 @@ public class NuevoChat extends AppCompatActivity {
         utils = new Utils(this);
 
         db = FirebaseFirestore.getInstance();
+        storageReference = FirebaseStorage.getInstance().getReference();
 
         contactList = (RecyclerView) findViewById(R.id.rvCotntactList);
         contactList.setLayoutManager(new LinearLayoutManager(this));
@@ -102,11 +106,13 @@ public class NuevoChat extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(ContactsAdapter.ViewHolder holder, int position) {
+
             User contact = contactos.get(position);
 
             holder.txtName.setText(contact.getName());
             holder.txtState.setText(contact.getState());
-            holder.imgContact.setImageBitmap(utils.cargarImagenContacto(contact.getId(), 100, 100));
+            String imagen = getApplicationContext().getFilesDir() + "/MChat/UserProfileImg/" + contact.getId() + ".png";
+            holder.imgContact.setImageBitmap(utils.cargarImagen(imagen, 100, 100));
 
         }
 

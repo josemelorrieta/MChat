@@ -7,13 +7,18 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,7 +26,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<User> usersFB = new ArrayList<User>();
 
     private Utils utils;
+
+    final long ONE_MEGABYTE = 1024 * 1024;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +162,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void validar() {
+        File file = new File( getApplicationContext().getFilesDir(), "MChat/UserProfileImg");
+
+        if(!file.exists()) {
+            file.mkdirs();
+        }
+
         //Pasar a la aplicación
         Log.d("TAG", "Pasar a la aplicación");
         Intent i = new Intent(this, ChatMain.class);
@@ -205,12 +223,36 @@ public class MainActivity extends AppCompatActivity {
                     modelo.contactos = utils.generarContactosApp(phonesList, usersFB);
 
                     Log.d("TAG", "Contactos cargados de la BD");
-                    cargarChats();
+                    descargarImagenesContactos(modelo.contactos);
                 } else {
                     Log.d("TAG", "Error cargando contactos de la BD");
                 }
             }
         });
+    }
+
+    private void descargarImagenesContactos(ArrayList<User> contactos) {
+        for (User contacto : contactos) {
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+            StorageReference pathReference = storageReference.child("UserProfileImg/" + contacto.getId() + ".jpg");
+
+            pathReference.getBytes(ONE_MEGABYTE)
+                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = false;
+                        Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+                        String filename = getApplicationContext().getFilesDir() + "/MChat/UserProfileImg/" + contacto.getId() + ".png";
+                        try (FileOutputStream out = new FileOutputStream(filename)) {
+                            image.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+        }
+        cargarChats();
     }
 
     private void cargarChats() {
@@ -233,5 +275,4 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
 }
