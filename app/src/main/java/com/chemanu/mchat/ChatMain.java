@@ -10,6 +10,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -38,7 +40,13 @@ public class ChatMain extends AppCompatActivity {
         chatList.setLayoutManager(new LinearLayoutManager(this));
         chatList.setHasFixedSize(true);
         chatList.setAdapter(new ChatsAdapter(modelo.chats));
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main_chat, menu);
+        return true;
     }
 
     @Override

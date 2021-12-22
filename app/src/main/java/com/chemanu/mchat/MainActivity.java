@@ -75,17 +75,17 @@ public class MainActivity extends AppCompatActivity {
 
         //Comprobar si tenemos los permisos para acceder a los contactos y al almacenamiento
         if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_DENIED ||
+                Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_DENIED /*||
             ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED ||
             ActivityCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED*/) {
             //Pedir permiso para acceder a los contactos
             ActivityCompat.requestPermissions(
                     MainActivity.this,
-                    new String[]{Manifest.permission.READ_CONTACTS,
-                                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                                 Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                                 //Manifest.permission.READ_EXTERNAL_STORAGE,
+                                 //Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     PERMISO_CONTACTOS);
         } else {
             comprobarUsuario();
@@ -232,25 +232,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void descargarImagenesContactos(ArrayList<User> contactos) {
-        for (User contacto : contactos) {
-            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
-            StorageReference pathReference = storageReference.child("UserProfileImg/" + contacto.getId() + ".jpg");
+        StorageReference storageReference = FirebaseStorage.getInstance().getReference();
 
-            pathReference.getBytes(ONE_MEGABYTE)
-                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                    @Override
-                    public void onSuccess(byte[] bytes) {
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inJustDecodeBounds = false;
-                        Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-                        String filename = getApplicationContext().getFilesDir() + "/MChat/UserProfileImg/" + contacto.getId() + ".png";
-                        try (FileOutputStream out = new FileOutputStream(filename)) {
-                            image.compress(Bitmap.CompressFormat.PNG, 100, out);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+        for (User contacto : contactos) {
+            String localPath = getApplicationContext().getFilesDir() + "/MChat/UserProfileImg/" + contacto.getId() + ".png";
+
+            //Comprobar si ya existe el fichero para no descargarlo
+            File file = new File(localPath);
+            if (!file.exists()) {
+                StorageReference pathReference = storageReference.child("UserProfileImg/" + contacto.getId() + ".jpg");
+                pathReference.getBytes(ONE_MEGABYTE)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                final BitmapFactory.Options options = new BitmapFactory.Options();
+                                options.inJustDecodeBounds = false;
+                                Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+                                try (FileOutputStream out = new FileOutputStream(localPath)) {
+                                    image.compress(Bitmap.CompressFormat.PNG, 100, out);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+            }
         }
         cargarChats();
     }

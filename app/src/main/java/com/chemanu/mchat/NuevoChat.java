@@ -58,7 +58,8 @@ public class NuevoChat extends AppCompatActivity {
         contactList.setAdapter(new ContactsAdapter(modelo.contactos));
 
         getSupportActionBar().setTitle("Contactos");
-        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.back);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     private class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHolder> {
@@ -111,8 +112,15 @@ public class NuevoChat extends AppCompatActivity {
 
             holder.txtName.setText(contact.getName());
             holder.txtState.setText(contact.getState());
+            //Cargar imagen de contacto
             String imagen = getApplicationContext().getFilesDir() + "/MChat/UserProfileImg/" + contact.getId() + ".png";
-            holder.imgContact.setImageBitmap(utils.cargarImagen(imagen, 100, 100));
+            Bitmap profileImg = utils.cargarImagen(imagen, 100, 100);
+
+            if (profileImg != null) {
+                holder.imgContact.setImageBitmap(profileImg);
+            } else {
+                holder.imgContact.setImageResource(R.drawable.avatar);
+            }
 
         }
 
@@ -133,7 +141,10 @@ public class NuevoChat extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.back:
+            /*case R.id.back:
+                onBackPressed();
+                return true;*/
+            case android.R.id.home:
                 onBackPressed();
                 return true;
             case R.id.actualizar:
